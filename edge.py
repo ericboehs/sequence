@@ -5,7 +5,7 @@ import numpy as np
 import argparse
 import cv2
 import cv2.cv as cv
-import imutils
+# import imutils
 
 cam = cv2.VideoCapture(1)
 pts = deque(maxlen=64)
@@ -18,7 +18,6 @@ def add_chip_to_board(chip, color):
         board_state[x_index][y_index] = color
     except:
         pass
-
 
 while True:
     print "-"
@@ -47,26 +46,26 @@ while True:
 
     # img = img[10:950, 540:3200]
 
-    img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    # img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     cimg = cv2.cvtColor(orig,cv2.COLOR_BGR2GRAY)
 
 
-    bilateral_filtered_image = cv2.bilateralFilter(img, 5, 175, 175)
-
-    edge_detected_image = cv2.Canny(bilateral_filtered_image, 60, 150)
-
-    contours, _= cv2.findContours(edge_detected_image, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-
-    contour_list = []
-    for contour in contours:
-        approx = cv2.approxPolyDP(contour,0.01*cv2.arcLength(contour,True),True)
-        area = cv2.contourArea(contour)
-        if (area > 800):
-            contour_list.append(contour)
+    # bilateral_filtered_image = cv2.bilateralFilter(img, 5, 175, 175)
+    #
+    # edge_detected_image = cv2.Canny(bilateral_filtered_image, 60, 150)
+    #
+    # contours, _= cv2.findContours(edge_detected_image, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    #
+    # contour_list = []
+    # for contour in contours:
+    #     approx = cv2.approxPolyDP(contour,0.01*cv2.arcLength(contour,True),True)
+    #     area = cv2.contourArea(contour)
+    #     if (area > 800):
+    #         contour_list.append(contour)
 
     # img = edge_detected_image
-    img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
-    cv2.drawContours(img, contour_list, -1, (0, 255, 255), 1)
+    # img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
+    # cv2.drawContours(img, contour_list, -1, (0, 255, 255), 1)
 
     boundaries = cv2.HoughCircles(cimg,cv.CV_HOUGH_GRADIENT,1,10,param1=50,param2=30,minRadius=27,maxRadius=31)
 
@@ -100,7 +99,7 @@ while True:
     if len(blue_cnts) > 0:
         for c in blue_cnts:
             ((x, y), radius) = cv2.minEnclosingCircle(c)
-            if radius > 25 and radius < 40:
+            if radius > 25 and radius < 40 and x > minX and y > minY and x < maxX and y < maxY:
                 M = cv2.moments(c)
                 center = (int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"]))
                 add_chip_to_board(center, "B")
@@ -118,7 +117,7 @@ while True:
     if len(green_cnts) > 0:
         for c in green_cnts:
             ((x, y), radius) = cv2.minEnclosingCircle(c)
-            if radius > 25 and radius < 40:
+            if radius > 25 and radius < 40 and x > minX and y > minY and x < maxX and y < maxY:
                 M = cv2.moments(c)
                 center = (int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"]))
                 add_chip_to_board(center, "G")
@@ -135,7 +134,7 @@ while True:
     if len(red_cnts) > 0:
         for c in red_cnts:
             ((x, y), radius) = cv2.minEnclosingCircle(c)
-            if radius > 25 and radius < 40:
+            if radius > 25 and radius < 40 and x > minX and y > minY and x < maxX and y < maxY:
                 M = cv2.moments(c)
                 center = (int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"]))
                 add_chip_to_board(center, "R")
@@ -145,12 +144,23 @@ while True:
     if isinstance(boundaries, np.ndarray) and boundaries.size == 12 and minY != None and maxY != None and minX != None and maxX != None:
         try:
             font = cv2.FONT_HERSHEY_SIMPLEX
-            score = os.popen('ruby solver.rb ' + ''.join(map(str, board_state))).read()
+            score = os.popen('ruby solver.rb ' + ''.join(map(str, board_state))).read().splitlines()
+            blue_score = score[0]
+            green_score = score[1]
             print score
-            cv2.putText(img, score, (500, 30), font, 1, (255,255,255), 3)
+            # cv2.rectangle(img, (minX, minY1), (minX + 300, minY + 50), (255,255,255), 2)
+            cv2.rectangle(img, (minX + 50, minY - 50), (minX + 400, minY), (255,255,255), cv.CV_FILLED)
+
+            if blue_score == "2":
+                os.system('say Blue won!')
+            if green_score == "2":
+                os.system('say Green won!')
+
+            cv2.putText(img, "Blue: " + blue_score, (minX + 100, minY - 10), font, 1, (255,0,0), 2)
+            cv2.putText(img, "Green: " + green_score, (minX + 250, minY - 10), font, 1, (0,205,0), 2)
             for angle in np.arange(0, 180, 90):
                 # rotated = imutils.rotate_bound(img[minY:maxY,minX:maxX], angle)
-                rotated = img#[minY:maxY,minX:maxX]
+                rotated = img#[minY-10:maxY,minX:maxX]
                 cv2.imshow('final', rotated)
             # cv2.imshow('orig', orig)
             # cv2.imshow('mask', mask[minY-45:maxY+45,minX-70:maxX+70])

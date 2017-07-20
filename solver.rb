@@ -48,4 +48,5 @@ def find_consecutives
   lines
 end
 
-puts find_consecutives
+cons = find_consecutives
+print "#{cons['B']}\n#{cons['G']}"
