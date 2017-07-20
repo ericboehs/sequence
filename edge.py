@@ -1,10 +1,10 @@
 from collections import deque
-import json
 import os
 import numpy as np
 import argparse
 import cv2
 import cv2.cv as cv
+from random import randint
 # import imutils
 
 cam = cv2.VideoCapture(1)
@@ -18,6 +18,20 @@ def add_chip_to_board(chip, color):
         board_state[x_index][y_index] = color
     except:
         pass
+
+def show_scoring_move(row, column, color):
+    if minX == None or minY == None or maxY == None or maxY == None: return
+    try:
+        move_x = row * averageXDistance + minX + averageXDistance - 70 + randint(0, 3)
+        move_y = (9 - column) * averageYDistance + minY + 45 + randint(0, 3)
+        if color == "B":
+            bgr = (255, 0, 0)
+        if color == "G":
+            bgr = (0, 255, 0)
+        cv2.circle(img, (move_x, move_y), 32, bgr, 2)
+    except:
+        pass
+
 
 while True:
     print "-"
@@ -99,7 +113,7 @@ while True:
     if len(blue_cnts) > 0:
         for c in blue_cnts:
             ((x, y), radius) = cv2.minEnclosingCircle(c)
-            if radius > 25 and radius < 40 and x > minX and y > minY and x < maxX and y < maxY:
+            if radius > 25 and radius < 50 and x > minX and y > minY and x < maxX and y < maxY:
                 M = cv2.moments(c)
                 center = (int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"]))
                 add_chip_to_board(center, "B")
@@ -145,9 +159,17 @@ while True:
         try:
             font = cv2.FONT_HERSHEY_SIMPLEX
             score = os.popen('ruby solver.rb ' + ''.join(map(str, board_state))).read().splitlines()
-            blue_score = score[0]
-            green_score = score[1]
             print score
+            blue_scoring_move = eval(score[0])
+            green_scoring_move = eval(score[1])
+            for move in blue_scoring_move:
+                show_scoring_move(move[0], move[1], "B")
+            for move in green_scoring_move:
+                show_scoring_move(move[0], move[1], "G")
+
+            blue_score = score[2]
+            green_score = score[3]
+            # print blue_scoring_move
             # cv2.rectangle(img, (minX, minY1), (minX + 300, minY + 50), (255,255,255), 2)
             cv2.rectangle(img, (minX + 50, minY - 50), (minX + 400, minY), (255,255,255), cv.CV_FILLED)
 
