@@ -16,7 +16,7 @@ This program detects and announces winning moves for the board game [Sequence](h
 My family would commonly play past the end of the game because we wouldn't notice someone won.
 
 ## How?
-This uses OpenCV to do the computer vision and Ruby to do the solving. (I'm a rubyist so this was the fast way to write the solver for me.)
+This uses OpenCV to do the computer vision and Ruby to do the solving. (I'm a rubyist so this was the fastest way to write the solver for me.)
 
 ## Caveats
 - The color profile is highly customized to my camera and will need to be adjusted if you really are trying to get this to work for yourself.
